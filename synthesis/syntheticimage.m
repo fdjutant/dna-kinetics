@@ -1,12 +1,12 @@
-function [image] = syntheticimage(range,peak_height,num_peaks,noise_level)
+function [image] = syntheticimage(xs,ys,range,peak_height,num_peaks,noise_level)
    
     x = linspace(0,range,range);
     y = linspace(0,range,range);
     [X,Y] = meshgrid(x,y);
     Z = X*0;
     
-    xs = range*rand(num_peaks);
-    ys = range*rand(num_peaks);
+    % xs = range*rand(num_peaks);
+    % ys = range*rand(num_peaks);
     for i = 1:length(xs)
         widthx = 2 + rand(1);
         widthy = 2 + rand(1);

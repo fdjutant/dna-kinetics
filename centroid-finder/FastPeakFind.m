@@ -1,4 +1,4 @@
-function  cent=FastPeakFind(d, threshold, filt ,edg, fid)
+function  xypeaks=FastPeakFind(d, threshold, filt ,edg, fid)
 % Analyzes noisy 2D images , finds x-y positions of peaks to 1 pixel accuracy
 % The code was meant to be as fast as possible, so I kept it pretty basic.
 % The code assumes that the peaks are relatively sparse, test whether there
@@ -130,7 +130,18 @@ if any(d(:))  ; %for the case of non zero raw image
                 cent = [cent ; x(j) ; y(j)];
             end
         end
-        
+
+        % convert the cent to 2D array (added by Franky)
+        xypeaks = zeros(length(cent)/2,2);
+        temp = 1; i = 1;
+        while i < length(cent)/2+1
+            xypeaks(i,2) = cent(temp);
+            xypeaks(i,1) = cent(temp+1);
+            temp = temp + 2;
+            i = i + 1;
+        end
+
+ 
         if savefileflag
             % previous version used dlmwrite, which can be slower than  fprinf
             %             dlmwrite([filename '.txt'],[cent],   '-append', ...
