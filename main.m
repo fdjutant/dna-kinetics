@@ -6,41 +6,48 @@ addpath(genpath('./synthesis'));
 addpath(genpath('./stacks-slider'));
 addpath(genpath('./math-equations'));
 addpath(genpath('./drift-correction'));
+addpath(genpath('./centroid-finder'));
+addpath(genpath('./saving-output'));
 
 %% Image parameters
-range = 500;
+pixel = 500;
 peak_height = 300;
-num_peaks = 80;
+num_peaks = 20;
 noise_level = 100;
 
 %% Generate image
-Zsynthetic = syntheticimage(range,peak_height,num_peaks,noise_level);
+image = syntheticimage(pixel,peak_height,num_peaks,noise_level);
 
-%% Drift the images
+%{
+%% Artificial drift addition
 nframes = 50;
-Zstacks = zeros(range,range,nframes);
-temp = zeros(range,range);
-
-xdrift = 1; ydrift = 1;
-Zstacks(:,:,1) = Zsynthetic(:,:); % reference
-
-for i = 1:nframes
-    temp(xdrift:end,ydrift:end) = Zsynthetic(1:end-(xdrift-1),1:end-(ydrift-1));
-    xdrift = xdrift + 1;
-    ydrift = ydrift + 1;
-    Zstacks(:,:,i+1) = temp(:,:);
-    temp = zeros(range,range);
-end
-% StackSlider(Zstacks)
+moviesdrifted = artificialdrift(image,nframes);
 
 %% Calculate the image correlation
-Zcorrected = driftcorrection(Zstacks);
-StackSlider(Zcorrected)
+moviescorrected = driftcorrection(moviesdrifted);
+StackSlider(moviescorrected)
 
 %% Save the files to tiff
-imwrite(im2uint8(Zcorrected(:,:,1)/1000),'./output-images/Synthetic.tif');
-imwrite(im2uint8(Zstacks(:,:,1)/1000),'./output-images/Undrift.tif');
-for i=1:nframes-1
-    imwrite(im2uint8(Zstacks(:,:,i+1)/1000),'./output-images/Synthetic.tif','WriteMode','append');
-    imwrite(im2uint8(Zcorrected(:,:,i+1)/1000),'./output-images/Drifted.tif','WriteMode','append');
+savingtif(moviesdrifted,'originalmovies.tif');
+savingtif(moviescorrected,'correctedmovies.tif');
+%}
+
+%% Find the peak by local maxima
+peak = FastPeakFind(image);
+% centroid = FastPeakFind(image,0.1*max(image(:)),10,2)
+xypeaks = zeros(length(peak)/2,2);
+temp = 1; i = 1;
+while i < length(peak)/2+1
+    xypeaks(i,2) = peak(temp)
+    xypeaks(i,1) = peak(temp+1)
+    temp = temp + 2;
+    i = i + 1
 end
+
+%% Find the centroids
+cent = findcentroids(image,xypeaks)
+figure;
+    imagesc(image); colormap('gray'); axis equal; hold on;
+    plot(xypeaks(:,1),xypeaks(:,2),'ro','LineWidth',1)
+    plot(cent(:,1),cent(:,2),'bx','LineWidth',1)
+    plot(peak(2:2:end),peak(1:2:end),'g+')
